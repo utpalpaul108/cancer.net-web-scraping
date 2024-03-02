@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <title>Cancer Data Extraction</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+</head>
+</head>
+
+<body>
+
+  <div class="container mt-3">
+
+    <div class="mt-4 p-5 bg-primary text-white rounded">
+      <h1>Data Extraction</h1>
+      <p>Choose the required sections and click on the <b>Extract Now</b> button to extract the data from the selected
+        sections.</p>
+      <hr>
+
+      <form action="/data-extraction" method="post" id="inputForm">
+        <div class="form-check">
+          <input type="checkbox" class="form-check-input" id="cancer_types" name="cancer_types" value="cancer_types">
+          <label class="form-check-label" for="cancer_types">Types of Cancer</label>
+        </div>
+        <div class="form-check">
+          <input type="checkbox" class="form-check-input" id="cancer_care" name="cancer_care" value="cancer_care">
+          <label class="form-check-label" for="cancer_care">Cancer Care</label>
+        </div>
+        <div class="form-check">
+          <input type="checkbox" class="form-check-input" id="coping_with_cancer" name="coping_with_cancer"
+            value="coping_with_cancer">
+          <label class="form-check-label" for="coping_with_cancer">Coping With Cancer</label>
+        </div>
+        <div class="form-check">
+          <input type="checkbox" class="form-check-input" id="research_and_advocacy" name="research_and_advocacy"
+            value="research_and_advocacy">
+          <label class="form-check-label" for="research_and_advocacy">Research and Advocacy</label>
+        </div>
+        <div class="form-check">
+          <input type="checkbox" class="form-check-input" id="survivorship" name="survivorship" value="survivorship">
+          <label class="form-check-label" for="survivorship">Survivorship</label>
+        </div>
+        <div class="form-check">
+          <input type="checkbox" class="form-check-input" id="blog_posts" name="blog_posts" value="blog_posts">
+          <label class="form-check-label" for="blog_posts">Blog</label>
+        </div>
+
+        <div class="progress mt-3" style="display: none;">
+          <div id="progressBar" class="progress-bar bg-warning progress-bar-striped progress-bar-animated"
+            role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+        </div>
+
+        <div id="response" class="mt-3"></div>
+
+        <button type="button" id="getDataBtn" class="btn btn-warning mt-3">Extract Now</button>
+      </form>
+    </div>
+
+  </div>
+
+  <script>
+
+    $(document).ready(function () {
+      $("#getDataBtn").click(function () {
+        $('#getDataBtn').attr('disabled', true)
+        // Show progress bar
+        $('.progress').show();
+        // $('#progressBar').css('width', '10%'); // Reset progress bar
+
+        // Collect selected checkbox values
+        var selectedSections = [];
+        $('input[type=checkbox]:checked').each(function () {
+          selectedSections.push($(this).val());
+        });
+
+        // Start background process with progress tracking
+        $.ajax({
+          url: "/api/data-extraction",
+          type: "POST",
+          contentType: "application/json",
+          data: JSON.stringify({ selectedSections: selectedSections }),
+          success: function (response) {
+            var percentage = 10;
+            var timer = setInterval(function () {
+              percentage = percentage + 20;
+              progress_bar_process(percentage, timer, response);
+            }, 1000);
+
+          },
+          error: function (xhr, status, error) {
+            $('#inputForm')[0].reset();
+            $('.progress').css('display', 'none');
+            $('.progress-bar').css('width', '0%');
+            $('#getDataBtn').attr('disabled', false);
+            $('#response').html('Something went wrong, please try again later.');
+            console.log(error);
+            setTimeout(function () {
+              $('#response').html('');
+            }, 5000);
+          }
+        });
+
+      });
+    });
+
+
+    function progress_bar_process(percentage, timer, data) {
+      $('#progressBar').css('width', percentage + '%');
+
+      if (percentage > 100) {
+        clearInterval(timer);
+        $('#inputForm')[0].reset();
+        $('.progress').css('display', 'none');
+        $('.progress-bar').css('width', '0%');
+        $('#getDataBtn').attr('disabled', false);
+        $('#response').html(data);
+        setTimeout(function () {
+          $('#response').html('');
+        }, 5000);
+      }
+    }
+
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+
+</html>

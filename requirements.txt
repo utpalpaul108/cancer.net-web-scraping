@@ -4,6 +4,7 @@ html5lib
 pyarrow
 pandas
 numpy
+Flask
 
 
 -e .

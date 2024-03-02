@@ -7,7 +7,7 @@ import os
 import re
 
 from webScraping.constants import *
-from webScraping.utils import getSectionUrl
+from webScraping.utils import getSectionUrl, getFullUrl
 
 
 class DataExtraction:
@@ -44,7 +44,8 @@ class DataExtraction:
         section_topics_url = []
         section_topics = soup.find('article')
         
-        section_topics = section_topics.find('div',class_='field-name-field-page-sub-pages')
+        if section_topics is not None:
+            section_topics = section_topics.find('div',class_='field-name-field-page-sub-pages')
         if section_topics is None:
             self.get_topic_content(section_url)
         
@@ -55,6 +56,31 @@ class DataExtraction:
                 section_topics_url.append(getSectionUrl(section_topic))
         
         return section_topics_url
+    
+
+    def get_total_blog_pages(self, base_url='https://www.cancer.net/blog', single_page_url='https://www.cancer.net/blog?page='):
+        response = requests.get(base_url, headers=self.headers)
+        soup = BeautifulSoup(response.text, 'html.parser')
+        total_pages = []
+        pages = soup.find('li', {'class': 'pager-last'})
+        if pages is not None:
+            total_pages = int(pages.a['href'].split('=')[-1])
+            total_pages = [(single_page_url + str(page_no)) for page_no in range(1, (total_pages+1))]
+
+        return total_pages
+    
+
+    def get_blog_posts(self, page_url):
+        response = requests.get(page_url, headers=self.headers)
+        soup = BeautifulSoup(response.text, 'html.parser')
+        all_posts = []
+        posts = soup.find('div',{'class' : 'view-content'})
+        if posts is not None:
+            posts = posts.find_all('div', {'class' : 'views-row'})
+            for post in posts:
+                blog_post_url = post.find('div',{'class' : 'views-field-title'}).a['href']
+                all_posts.append(getFullUrl(blog_post_url))
+        return all_posts
     
 
     def get_topic_content(self, topic_url):
@@ -82,7 +108,6 @@ class DataExtraction:
         
         for question in questions:
             df['question'].append(question.text.strip())
-            
             answer = ""
             next_element = question.find_next_sibling()
             while next_element and next_element.name != 'h3':

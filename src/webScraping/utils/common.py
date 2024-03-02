@@ -6,5 +6,11 @@ def getSectionUrl(section):
         section_url = 'https://www.cancer.net' + section_url
     
     return section_url
+
+def getFullUrl(url):
+    if not url.startswith('https:'):
+        url = 'https://www.cancer.net' + url
+    
+    return url
     
     
