@@ -12,7 +12,7 @@ class CancerCarePipipine:
                     section_topics = data_extraction.get_section_topics(section_url)
                     for section_topic_url in section_topics:
                         try:
-                            data_extraction.get_topic_content(section_topic_url)
+                            data_extraction.get_topic_content(topic_url=section_topic_url)
                         except:
                             continue
                 except:

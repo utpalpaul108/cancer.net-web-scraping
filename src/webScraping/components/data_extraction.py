@@ -74,6 +74,27 @@ class DataExtraction:
         return total_pages
     
 
+    def get_cancer_catalogs(self, URL):
+        response = requests.get(URL, headers = self.headers)
+        soup = BeautifulSoup(response.content, 'html.parser')
+
+        cancer_catalogs = soup.find('div', id='quicktabs-container-cancer_types')
+        cancer_catalogs = cancer_catalogs.select('div .quicktabs-tabpage')
+        return cancer_catalogs
+    
+    
+    def get_cancer_details_url(self, cancer_url):
+        cancer_details_url = requests.get(cancer_url, headers = self.headers)
+        soup = BeautifulSoup(cancer_details_url.content, 'html.parser')
+        view_all_link = soup.find('a', string='View All Pages')
+        
+        if view_all_link:
+            cancer_details_url = getFullUrl(view_all_link['href']) 
+        else:
+            cancer_details_url = cancer_url
+        
+        return cancer_details_url
+
     def get_blog_posts(self, page_url):
         response = requests.get(page_url, headers=self.headers)
         soup = BeautifulSoup(response.text, 'html.parser')
@@ -87,7 +108,7 @@ class DataExtraction:
         return all_posts
     
 
-    def get_topic_content(self, topic_url, topic='general'):
+    def get_topic_content(self, topic_url,topic='general', topic_name=''):
 
         response = requests.get(topic_url, headers = self.headers)
         soup = BeautifulSoup(response.content, 'html.parser')
@@ -97,14 +118,17 @@ class DataExtraction:
             'answer':[]
         }
 
-        articles = soup.find_all('article')
+        if topic == 'general':
+            articles = soup.find_all('article')
+
+            if len(articles) > 1:
+                section_topics = self.get_section_topics(topic_url)
+                for section_topic_url in section_topics:
+                    self.get_topic_content(section_topic_url)
+
+        if topic != 'cancer':
+            topic_name = topic_url.split('/')[-1]
         
-        if len(articles) > 1 and topic != 'blog':
-            section_topics = self.get_section_topics(topic_url)
-            for section_topic_url in section_topics:
-                self.get_topic_content(section_topic_url)
-        
-        topic_name = topic_url.split('/')[-1]
         questions = soup.find_all('h3')
         skip_contents = [content.lower() for content in self.skip_contents]
         partially_skip_contents = [content.lower() for content in self.partially_skip_contents]

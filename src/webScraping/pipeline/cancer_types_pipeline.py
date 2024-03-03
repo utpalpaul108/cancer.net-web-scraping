@@ -15,7 +15,7 @@ class CancerTypesPipeline:
                             base_url = getFullUrl(cancer_type.find('a').get('href'))
                             cancer_name = base_url.split('/')[-1]       
                             cancer_details_url = data_extraction.get_cancer_details_url(base_url)
-                            cancer_details = data_extraction.get_cancer_details(cancer_details_url, cancer_name)
+                            cancer_details = data_extraction.get_topic_content(topic_url=cancer_details_url, topic='cancer', topic_name=cancer_name)
                         except:
                             continue
                 except:
