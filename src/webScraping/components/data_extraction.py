@@ -1,6 +1,7 @@
 # Import Libraries
 import requests
 from bs4 import BeautifulSoup
+from urllib.parse import urlparse, parse_qs
 import pandas as pd
 import numpy as np
 import os
@@ -64,8 +65,11 @@ class DataExtraction:
         total_pages = []
         pages = soup.find('li', {'class': 'pager-last'})
         if pages is not None:
-            total_pages = int(pages.a['href'].split('=')[-1])
-            total_pages = [(single_page_url + str(page_no)) for page_no in range(1, (total_pages+1))]
+            page_url = pages.a['href']
+            parsed_url = urlparse(page_url)
+            query_params = parse_qs(parsed_url.query)
+            total_pages = int(query_params.get('page', [None])[0])
+            total_pages = [(single_page_url + str(page_no)) for page_no in range(total_pages+2)]
 
         return total_pages
     
@@ -83,7 +87,7 @@ class DataExtraction:
         return all_posts
     
 
-    def get_topic_content(self, topic_url):
+    def get_topic_content(self, topic_url, topic='general'):
 
         response = requests.get(topic_url, headers = self.headers)
         soup = BeautifulSoup(response.content, 'html.parser')
@@ -95,7 +99,7 @@ class DataExtraction:
 
         articles = soup.find_all('article')
         
-        if len(articles) > 1:
+        if len(articles) > 1 and topic != 'blog':
             section_topics = self.get_section_topics(topic_url)
             for section_topic_url in section_topics:
                 self.get_topic_content(section_topic_url)

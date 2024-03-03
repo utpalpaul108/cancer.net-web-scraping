@@ -13,7 +13,7 @@ class BlogPostsPipipine:
                     blog_posts = data_extraction.get_blog_posts(page)
                     for blog_post_url in blog_posts:
                         try:
-                            data_extraction.get_topic_content(blog_post_url)
+                            data_extraction.get_topic_content(topic_url=blog_post_url, topic='blog')
                         except:
                             continue
                 except:
